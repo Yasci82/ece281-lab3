@@ -106,15 +106,47 @@ begin
 	begin
 	
         --off state	
-	   w_Left <= '0'; w_Right <= '0'; wait for k_clk_period;
-            assert w_lights_L = "000" report "left blinker should be off but it is not" severity error;
-            assert w_lights_R = "000" report "right blinker should be off but it is not" severity error;
-            
-       w_Left <= '1'; wait for k_clk_period;
-            assert w_lights_L = "101" report "left blinker is on" severity error;
-            assert w_lights_R = "" report "" severity error;
+	   w_Left <= '0'; w_Right <= '0'; wait for k_clk_period/2;
+            assert w_lights_L = "000" report "left blinker should be off" severity error;
+            assert w_lights_R = "000" report "right blinker should be off" severity error;
+         
+         --left blinker state   
+       w_Left <= '1'; w_Right <= '0'; wait for k_clk_period/2;
+            assert w_lights_L = "001" report "left blinker 1 should be on" severity error;
+            assert w_lights_R = "000" report "right blinkers should be off" severity error;
+          wait for k_clk_period;
+            assert w_Lights_L = "011" report "left blinker 2 should be on" severity error;
+            assert w_Lights_R = "000" report "right blinkers should be off" severity error;
+          wait for k_clk_period;
+            assert w_Lights_L = "111" report "left blinker 3 should be on" severity error;
+            assert w_lights_R = "000" report "right blinkers should be off" severity error;
+          wait for k_clk_period;
+            assert w_lights_L = "000" report "left blinker should be off" severity error;
+            assert w_lights_R = "000" report "right blinker should be off" severity error;
        
-      
+       --right blinker states
+       w_Left <= '0'; w_Right <= '1'; wait for k_clk_period/2;
+            assert w_lights_L = "000" report "left blinkers should be off" severity error;
+            assert w_lights_R = "001" report "right blinker 1 should be on" severity error;
+         wait for k_clk_period;
+            assert w_Lights_L = "000" report "left blinkers should be off" severity error;
+            assert w_Lights_R = "011" report "right blinker 2 should be on" severity error;
+         wait for k_clk_period;
+            assert w_Lights_L = "000" report "left blinkers should be off" severity error;
+            assert w_lights_R = "111" report "right blinker 3 should be on" severity error;
+         wait for k_clk_period;
+            assert w_lights_L = "000" report "left blinker should be off" severity error;
+            assert w_lights_R = "000" report "right blinker should be off" severity error;
+            
+         --on then off states
+         w_Left <= '1'; w_Right <= '1'; wait for k_clk_period/2;
+              assert w_lights_L = "111" report "left blinkers should be on" severity error;
+              assert w_lights_R = "111" report "right blinkers should be on" severity error;
+           wait for k_clk_period;
+         w_Left <= '0'; w_Right <= '0'; wait for k_clk_period;
+              assert w_lights_L = "000" report "left blinkers should be off" severity error;
+              assert w_lights_R = "00" report "right blinkers should be off" severity error;
+           wait for k_clk_period;
 	   
 	-----------------------------------------------------	
 	wait;
