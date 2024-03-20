@@ -58,27 +58,65 @@ architecture test_bench of thunderbird_fsm_tb is
 	
 	component thunderbird_fsm is 
 	  port(
-		
+		  i_reset, i_clk : in std_logic;
+          i_left, i_right : in std_logic;
+          o_lights_L : out std_logic_vector(2 downto 0);
+          o_lights_R : out std_logic_vector(2 downto 0)
 	  );
 	end component thunderbird_fsm;
 
 	-- test I/O signals
-	
+	signal w_reset : std_logic := '0';
+    signal w_clk : std_logic := '0';
+    signal w_Left : std_logic := '0';
+    signal w_Right : std_logic := '0';
+    
 	-- constants
+	constant k_clk_period : time := 10 ns;
 	
+	--do i need to add these outputs just like we did in lab2 and also as it is stated in ice4 that they should be 2-bit signals?
+	signal w_lights_L : std_logic_vector(2 downto 0) := "000";
+	signal w_lights_R : std_logic_vector(2 downto 0) := "000";
 	
 begin
 	-- PORT MAPS ----------------------------------------
-	
+	uut: thunderbird_fsm port map(
+           i_reset => w_reset,
+           i_clk => w_clk,
+           i_left => w_Left,
+           i_right => w_Right,
+           o_lights_R => w_lights_R,
+                         o_lights_L => w_lights_L
+        );
 	-----------------------------------------------------
 	
 	-- PROCESSES ----------------------------------------	
     -- Clock process ------------------------------------
-    
+    clk_process: process
+    begin 
+        w_clk <= '0';
+        wait for k_clk_period/4;
+        w_clk <= '1';
+        wait for k_clk_period/4;
+   end process;
 	-----------------------------------------------------
 	
 	-- Test Plan Process --------------------------------
+	TEST_plan: process
+	begin
 	
+        --off state	
+	   w_Left <= '0'; w_Right <= '0'; wait for k_clk_period;
+            assert w_lights_L = "000" report "left blinker should be off but it is not" severity error;
+            assert w_lights_R = "000" report "right blinker should be off but it is not" severity error;
+            
+       w_Left <= '1'; wait for k_clk_period;
+            assert w_lights_L = "101" report "left blinker is on" severity error;
+            assert w_lights_R = "" report "" severity error;
+       
+      
+	   
 	-----------------------------------------------------	
-	
+	wait;
+	end process;
 end test_bench;

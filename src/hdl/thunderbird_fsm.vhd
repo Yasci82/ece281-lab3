@@ -36,18 +36,18 @@
 --|					can be changed by the inputs
 --|					
 --|
---|                 xxx State Encoding key
+--|                 Binary State Encoding key
 --|                 --------------------
 --|                  State | Encoding
 --|                 --------------------
---|                  OFF   | 
---|                  ON    | 
---|                  R1    | 
---|                  R2    | 
---|                  R3    | 
---|                  L1    | 
---|                  L2    | 
---|                  L3    | 
+--|                  OFF   |000 
+--|                  ON    |001
+--|                  R1    |010
+--|                  R2    |011
+--|                  R3    |100
+--|                  L1    |101
+--|                  L2    |110
+--|                  L3    |111
 --|                 --------------------
 --|
 --|
@@ -87,22 +87,69 @@ library ieee;
  
 entity thunderbird_fsm is 
   port(
-	
+	   i_clk, i_reset  : in    std_logic;
+       i_left, i_right : in    std_logic;
+       o_lights_L      : out   std_logic_vector(2 downto 0);
+       o_lights_R      : out   std_logic_vector(2 downto 0)
   );
 end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
+      signal f_Q_next: std_logic_vector(1 downto 0) := "10";
+      signal w_stoplight : std_logic_vector(2 downto 0) := "000"; -- RYG one-hot
+      signal f_clk	:	std_logic	:= '0';
+      signal w_reset : std_logic := '0';
+      signal w_clk : std_logic := '0';
 
 -- CONSTANTS ------------------------------------------------------------------
-  
+  signal f_s : STD_LOGIC_vector(2 downto 0):="000";
+  signal f_s_next : STD_LOGIC_vector(2 downto 0):="000";
 begin
 
 	-- CONCURRENT STATEMENTS --------------------------------------------------------	
-	
+	f_s_next(0) <= (not i_right and i_left and not f_s(0) and not f_s(1) and not f_s(2)) or
+	               ( i_right and i_left and not f_S(0) and not f_S(1) and not f_S(2)) or
+	               (not f_S(0) and f_S(1) and not f_S(2)) or 
+	               (not f_S(0) and  f_S(1) and  f_S(2));
+    f_s_next(1) <= (i_right and not i_left and not f_S(0) and not f_S(1) and not f_S(2)) or 
+                   (not f_S(0) and f_S(1) and not f_S(2)) or 
+                   (f_S(0) and not f_S(1) and f_S(2)) or 
+                   (not f_S(0) and  f_S(1) and  f_S(2));
+    f_s_next(2) <= (not i_right and i_left and not f_S(0) and not f_S(1) and not f_S(2)) or 
+                   ( f_S(0) and f_S(1) and not f_S(2)) or 
+                   (f_S(0) and not f_S(1) and f_S(2)) or 
+                   (not f_S(0) and  f_S(1) and  f_S(2));
+                           
     ---------------------------------------------------------------------------------
-	
-	-- PROCESSES --------------------------------------------------------------------
+    o_lights_L(0) <= (not f_S(1) and f_S(0)) or
+                     (f_S(2) and f_S(1));
+    o_lights_L(1) <= (not f_S(2) and not f_S(1) and f_S(0)) or
+                     (f_S(2) and f_S(1));
+    o_lights_L(2) <= (f_S(0) and not f_S(1) and not f_S(2)) or 
+                     (f_S(0) and f_S(1) and f_S(2));           
+    o_lights_R(0) <= (f_S(0) and not f_S(1) and not f_S(2)) or 
+                     (f_S(1) and not f_S(2)) or 
+                     (not f_S(0) and not f_S(1) and f_S(2));    
+    o_lights_R(1) <= (f_S(0) and not f_S(2)) or 
+                     (not f_S(0) and not f_S(1) and f_S(2));
+	o_lights_R(2) <= (f_S(0) and not f_S(1) and not f_S(2)) or 
+	                 (not f_S(0) and not f_S(1) and f_S(2));
     
+    
+    
+    
+    
+	-- PROCESSES --------------------------------------------------------------------
+    ops_process: process(i_clk, i_reset)
+            begin
+                	--Reset state is yellow
+            if i_reset = '1' then
+                f_S <= "000";        -- reset state is yellow
+            elsif (rising_edge(i_clk)) then   --is the rising_edge() function defined or is it a function in the lib?
+                f_S <= f_S_next;    -- next state becomes current state
+                end if;
+        
+            end process ops_process;
 	-----------------------------------------------------					   
 				  
 end thunderbird_fsm_arch;
